@@ -337,19 +337,17 @@ const UpdateDevice = ({ device, setResponseMessage, setError }) => {
     user: {
       userId: device.user.userId
     },
-    softwareList: [
-      {
-        softwareId: device.softwareList[0].softwareId,
-        softwareName: device.softwareList[0].softwareName,
-        version: device.softwareList[0].version,
-        licenseKey: device.softwareList[0].licenseKey,
-        purchaseDate: device.softwareList[0].purchaseDate,
-        expirationDate: device.softwareList[0].expirationDate,
-        supportEndDate: device.softwareList[0].supportEndDate,
-        status: device.softwareList[0].status,
-        dateOfLastRenewal: device.softwareList[0].dateOfLastRenewal
-      }
-    ],
+    softwareList: device.softwareList.map(software => ({
+      softwareId: software.softwareId,
+      softwareName: software.softwareName,
+      version: software.version,
+      licenseKey: software.licenseKey,
+      purchaseDate: software.purchaseDate,
+      expirationDate: software.expirationDate,
+      supportEndDate: software.supportEndDate,
+      status: software.status,
+      dateOfLastRenewal: software.dateOfLastRenewal
+    })),
     lifecycleEvent: {
       eventId: device.lifecycleEvent.eventId,
       eventType: device.lifecycleEvent.eventType,
@@ -373,19 +371,17 @@ const UpdateDevice = ({ device, setResponseMessage, setError }) => {
       user: {
         userId: device.user.userId
       },
-      softwareList: [
-        {
-          softwareId: device.softwareList[0].softwareId,
-          softwareName: device.softwareList[0].softwareName,
-          version: device.softwareList[0].version,
-          licenseKey: device.softwareList[0].licenseKey,
-          purchaseDate: device.softwareList[0].purchaseDate,
-          expirationDate: device.softwareList[0].expirationDate,
-          supportEndDate: device.softwareList[0].supportEndDate,
-          status: device.softwareList[0].status,
-          dateOfLastRenewal: device.softwareList[0].dateOfLastRenewal
-        }
-      ],
+      softwareList: device.softwareList.map(software => ({
+        softwareId: software.softwareId,
+        softwareName: software.softwareName,
+        version: software.version,
+        licenseKey: software.licenseKey,
+        purchaseDate: software.purchaseDate,
+        expirationDate: software.expirationDate,
+        supportEndDate: software.supportEndDate,
+        status: software.status,
+        dateOfLastRenewal: software.dateOfLastRenewal
+      })),
       lifecycleEvent: {
         eventId: device.lifecycleEvent.eventId,
         eventType: device.lifecycleEvent.eventType,
@@ -398,18 +394,39 @@ const UpdateDevice = ({ device, setResponseMessage, setError }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Handle nested fields using dot notation
-    if (name.includes('.')) {
-      const [fieldName, subFieldName] = name.split('.');
-      setUpdatedDevice(prevState => ({
-        ...prevState,
-        [fieldName]: {
-          ...prevState[fieldName],
-          [subFieldName]: value
-        }
-      }));
+    
+    // Check if the input field is in the softwareList array
+    if (name.startsWith('softwareList')) {
+      const [, index, fieldName] = name.match(/softwareList\[(\d+)\]\.(.*)/);
+      
+      // Create a copy of the updatedDevice state
+      const updatedDeviceCopy = { ...updatedDevice };
+      
+      // Update the specific field in the softwareList array
+      updatedDeviceCopy.softwareList[index][fieldName] = value;
+      
+      // Update the state with the modified softwareList
+      setUpdatedDevice(updatedDeviceCopy);
     } else {
-      setUpdatedDevice({ ...updatedDevice, [name]: value });
+      // Handle other fields not in softwareList (top-level or nested)
+      if (name.includes('.')) {
+        const fieldNames = name.split('.'); // Split into an array of field names
+        let nestedObject = { ...updatedDevice }; // Start with a copy of updatedDevice
+    
+        // Traverse nested objects, creating empty objects if they don't exist
+        for (let i = 0; i < fieldNames.length - 1; i++) {
+          if (!nestedObject[fieldNames[i]]) {
+            nestedObject[fieldNames[i]] = {}; // Initialize if not defined
+          }
+          nestedObject = nestedObject[fieldNames[i]]; // Move to the next nested level
+        }
+    
+        nestedObject[fieldNames[fieldNames.length - 1]] = value; // Update the leaf node value
+    
+        setUpdatedDevice({ ...updatedDevice }); // Update state
+      } else {
+        setUpdatedDevice({ ...updatedDevice, [name]: value }); // Update top-level fields
+      }
     }
   };
 
@@ -417,7 +434,7 @@ const UpdateDevice = ({ device, setResponseMessage, setError }) => {
     e.preventDefault();
     try {
       await DeviceService.updateDevice(updatedDevice.deviceId, updatedDevice);
-      setResponseMessage('Device updated successfully.');
+      window.alert('Device updated successfully.');
     } catch (error) {
       console.error('Error updating device:', error);
       setError('Error updating device.');
@@ -533,114 +550,121 @@ const UpdateDevice = ({ device, setResponseMessage, setError }) => {
           required
         />
       </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0SoftwareId">Software ID:</label>
-        <input
-          type="number"
-          id="softwareList0SoftwareId"
-          name="softwareList[0].softwareId"
-          value={updatedDevice.softwareList[0].softwareId}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0SoftwareName">Software Name:</label>
-        <input
-          type="text"
-          id="softwareList0SoftwareName"
-          name="softwareList[0].softwareName"
-          value={updatedDevice.softwareList[0].softwareName}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0Version">Software Version:</label>
-        <input
-          type="text"
-          id="softwareList0Version"
-          name="softwareList[0].version"
-          value={updatedDevice.softwareList[0].version}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0LicenseKey">License Key:</label>
-        <input
-          type="text"
-          id="softwareList0LicenseKey"
-          name="softwareList[0].licenseKey"
-          value={updatedDevice.softwareList[0].licenseKey}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0PurchaseDate">Software Purchase Date:</label>
-        <input
-          type="date"
-          id="softwareList0PurchaseDate"
-          name="softwareList[0].purchaseDate"
-          value={updatedDevice.softwareList[0].purchaseDate}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0ExpirationDate">Software Expiration Date:</label>
-        <input
-          type="date"
-          id="softwareList0ExpirationDate"
-          name="softwareList[0].expirationDate"
-          value={updatedDevice.softwareList[0].expirationDate}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0SupportEndDate">Software Support End Date:</label>
-        <input
-          type="date"
-          id="softwareList0SupportEndDate"
-          name="softwareList[0].supportEndDate"
-          value={updatedDevice.softwareList[0].supportEndDate}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0Status">Software Status:</label>
-        <input
-          type="text"
-          id="softwareList0Status"
-          name="softwareList[0].status"
-          value={updatedDevice.softwareList[0].status}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="softwareList0DateOfLastRenewal">Software Last Renewal Date:</label>
-        <input
-          type="date"
-          id="softwareList0DateOfLastRenewal"
-          name="softwareList[0].dateOfLastRenewal"
-          value={updatedDevice.softwareList[0].dateOfLastRenewal}
-          onChange={handleInputChange}
-          className="form-control"
-          required
-        />
-      </div>
+      {/* Render software list fields dynamically */}
+      {updatedDevice.softwareList.map((software, index) => (
+        <div key={`softwareList${index}`} className="border p-3 mb-3">
+          <h4>Software {index + 1}</h4>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}SoftwareId`}>Software ID:</label>
+            <input
+              type="number"
+              id={`softwareList${index}SoftwareId`}
+              name={`softwareList[${index}].softwareId`}
+              value={software.softwareId}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}SoftwareName`}>Software Name:</label>
+            <input
+              type="text"
+              id={`softwareList${index}SoftwareName`}
+              name={`softwareList[${index}].softwareName`}
+              value={software.softwareName}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}Version`}>Software Version:</label>
+            <input
+              type="text"
+              id={`softwareList${index}Version`}
+              name={`softwareList[${index}].version`}
+              value={software.version}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}LicenseKey`}>License Key:</label>
+            <input
+              type="text"
+              id={`softwareList${index}LicenseKey`}
+              name={`softwareList[${index}].licenseKey`}
+              value={software.licenseKey}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}PurchaseDate`}>Software Purchase Date:</label>
+            <input
+              type="date"
+              id={`softwareList${index}PurchaseDate`}
+              name={`softwareList[${index}].purchaseDate`}
+              value={software.purchaseDate}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}ExpirationDate`}>Software Expiration Date:</label>
+            <input
+              type="date"
+              id={`softwareList${index}ExpirationDate`}
+              name={`softwareList[${index}].expirationDate`}
+              value={software.expirationDate}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}SupportEndDate`}>Software Support End Date:</label>
+            <input
+              type="date"
+              id={`softwareList${index}SupportEndDate`}
+              name={`softwareList[${index}].supportEndDate`}
+              value={software.supportEndDate}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}Status`}>Software Status:</label>
+            <input
+              type="text"
+              id={`softwareList${index}Status`}
+              name={`softwareList[${index}].status`}
+              value={software.status}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor={`softwareList${index}DateOfLastRenewal`}>Software Last Renewal Date:</label>
+            <input
+              type="date"
+              id={`softwareList${index}DateOfLastRenewal`}
+              name={`softwareList[${index}].dateOfLastRenewal`}
+              value={software.dateOfLastRenewal}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
+          </div>
+        </div>
+      ))}
+      {/* Lifecycle event fields */}
       <div className="form-group">
         <label htmlFor="lifecycleEventEventId">Lifecycle Event ID:</label>
         <input
